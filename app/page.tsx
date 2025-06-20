@@ -1,5 +1,7 @@
 "use client";
 
+// https://www.youtube.com/watch?v=O8ivm7403rk&t=8s
+
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -28,17 +30,31 @@ export default function Home() {
     });
   }, []);
 
+  const handleEdit = (todo: dataType): void => {
+    console.log(`Editing todo: ${todo.title}`);
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <div>CSCI4830 Hello world!</div>
-        <ul>
-          {data.map((todo: dataType) => (
-            <li key={todo.id}>
-              {todo.title} - {todo.completed ? "Completed" : "Not Completed"}
-            </li>
-          ))}
-        </ul>
+        {data.map((todo: dataType) => (
+          <div className="flex items-center gap-4">
+            {todo.title} - {todo.completed ? "Completed" : "Not Completed"}
+            <button
+              className="cursor-pointer"
+              onClick={() =>
+                handleEdit({
+                  id: todo.id,
+                  title: "new title",
+                  completed: true,
+                } as dataType)
+              }
+            >
+              Edit
+            </button>
+          </div>
+        ))}
 
         <Link href="/about">
           <button className="hover:cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-full">
