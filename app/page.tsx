@@ -41,12 +41,13 @@ export default function Home() {
 
   const handleSave = async (id: string): Promise<void> => {
     try {
-      const response = await fetch(`http://localhost:3000/api/todoItem/${id}`, {
+      const response = await fetch(`http://localhost:3000/api/todoItem`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title: editText }),
+        // bodyにIDと更新したいテキストの両方を含める
+        body: JSON.stringify({ id: id, title: editText }),
       });
 
       if (!response.ok) {
@@ -55,13 +56,11 @@ export default function Home() {
       }
 
       const updatedTodo = await response.json();
-      
-      setData(prevData => 
-        prevData.map(item => 
-          item.id === id ? updatedTodo : item
-        )
+
+      setData((prevData) =>
+        prevData.map((item) => (item.id === id ? updatedTodo : item))
       );
-      
+
       setEditingId(null);
       setEditText("");
     } catch (error) {
@@ -83,7 +82,10 @@ export default function Home() {
           </CardHeader>
           <CardContent className="space-y-4">
             {data.map((todo: dataType) => (
-              <div className="flex items-center justify-between p-4 border rounded-lg" key={todo.id}>
+              <div
+                className="flex items-center justify-between p-4 border rounded-lg"
+                key={todo.id}
+              >
                 <div className="flex items-center gap-4 flex-1">
                   {editingId === todo.id ? (
                     <Input
