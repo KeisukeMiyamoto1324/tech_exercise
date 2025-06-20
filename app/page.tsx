@@ -1,9 +1,11 @@
 "use client";
-
 // https://www.youtube.com/watch?v=O8ivm7403rk&t=8s
-
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 interface dataType {
   id: string;
@@ -15,13 +17,14 @@ async function fetchData() {
   const response = await fetch("http://localhost:3000/api/todoItem", {
     method: "GET",
   });
-
   return response.json();
 }
 
 export default function Home() {
   const [text, setText] = useState("");
   const [data, setData] = useState<dataType[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
 
   // 初回レンダリング時に一度だけデータを取得する
   useEffect(() => {
@@ -32,50 +35,101 @@ export default function Home() {
 
   const handleEdit = (todo: dataType): void => {
     console.log(`Editing todo: ${todo.title}`);
+    setEditingId(todo.id);
+    setEditText(todo.title);
+  };
+
+  const handleSave = async (id: string): Promise<void> => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/todoItem/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title: editText }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to update todo");
+        return;
+      }
+
+      const updatedTodo = await response.json();
+      
+      setData(prevData => 
+        prevData.map(item => 
+          item.id === id ? updatedTodo : item
+        )
+      );
+      
+      setEditingId(null);
+      setEditText("");
+    } catch (error) {
+      console.error("Error updating todo:", error);
+    }
+  };
+
+  const handleCancel = (): void => {
+    setEditingId(null);
+    setEditText("");
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <div>CSCI4830 Hello world!</div>
-        {data.map((todo: dataType) => (
-          <div className="flex items-center gap-4">
-            {todo.title} - {todo.completed ? "Completed" : "Not Completed"}
-            <button
-              className="cursor-pointer"
-              onClick={() =>
-                handleEdit({
-                  id: todo.id,
-                  title: "new title",
-                  completed: true,
-                } as dataType)
-              }
-            >
-              Edit
-            </button>
-          </div>
-        ))}
-
-        <Link href="/about">
-          <button className="hover:cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-full">
-            Go to About
-          </button>
-        </Link>
-
-        <input
-          type="text"
-          value={text}
-          placeholder="Enter something here and click button below"
-          onChange={(e) => setText(e.target.value)}
-          className="border border-blue-500 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <div>{text}</div>
-
-        <Link href={`/${text}`}>
-          <button className="hover:cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-full">
-            Dynamic routing
-          </button>
-        </Link>
+    <div className="container mx-auto p-8 min-h-screen">
+      <main className="flex flex-col gap-8 items-center">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-center">CSCI4830 Hello world!</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {data.map((todo: dataType) => (
+              <div className="flex items-center justify-between p-4 border rounded-lg" key={todo.id}>
+                <div className="flex items-center gap-4 flex-1">
+                  {editingId === todo.id ? (
+                    <Input
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="flex-1"
+                    />
+                  ) : (
+                    <span className="font-medium">{todo.title}</span>
+                  )}
+                  <Badge variant={todo.completed ? "default" : "secondary"}>
+                    {todo.completed ? "Completed" : "Not Completed"}
+                  </Badge>
+                </div>
+                <div className="flex gap-2">
+                  {editingId === todo.id ? (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleSave(todo.id)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(todo)}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
