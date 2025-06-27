@@ -8,7 +8,7 @@ git clone https://github.com/KeisukeMiyamoto1324/tech_exercise.git
 ```
 
 ```bash
-npn install
+npm install
 ```
 
 ```bash
