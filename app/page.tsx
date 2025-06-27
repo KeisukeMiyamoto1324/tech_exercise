@@ -17,7 +17,7 @@ async function fetchData(): Promise<DataType[]> {
   if (!response.ok) throw new Error("Failed to fetch data");
   return response.json();
 }
-
+//hello
 export default function HomePage() {
   const [data, setData] = useState<DataType[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
