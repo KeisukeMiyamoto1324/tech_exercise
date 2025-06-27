@@ -2,12 +2,12 @@
   "todos": [
     {
       "id": "1",
-      "title": "Learn fja;kjfd;a",
+      "title": "Learn",
       "completed": false
     },
     {
       "id": "2",
-      "title": "Demo CRUD operations",
+      "title": "Demo CRUD",
       "completed": false
     },
     {
