@@ -78,7 +78,7 @@ export default function Home() {
       <main className="flex flex-col gap-8 items-center">
         <Card className="w-full max-w-2xl">
           <CardHeader>
-            <CardTitle className="text-center">CSCI4830 Hello world!</CardTitle>
+            <CardTitle className="text-center">CSCI4830 Hello world!</CardTitle> // Dominic Larson was here
           </CardHeader>
           <CardContent className="space-y-4">
             {data.map((todo: dataType) => (
