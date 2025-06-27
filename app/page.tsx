@@ -1,138 +1,114 @@
 "use client";
 // https://www.youtube.com/watch?v=O8ivm7403rk&t=8s
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 
-interface dataType {
+interface DataType {
   id: string;
   title: string;
   completed: boolean;
 }
 
-async function fetchData() {
-  const response = await fetch("http://localhost:3000/api/todoItem", {
-    method: "GET",
-  });
+async function fetchData(): Promise<DataType[]> {
+  const response = await fetch("/api/todoItem");
+  if (!response.ok) throw new Error("Failed to fetch data");
   return response.json();
 }
 
-export default function Home() {
-  const [text, setText] = useState("");
-  const [data, setData] = useState<dataType[]>([]);
+export default function HomePage() {
+  const [data, setData] = useState<DataType[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
+  const [editText, setEditText] = useState<string>("");
 
-  // 初回レンダリング時に一度だけデータを取得する
   useEffect(() => {
-    fetchData().then((fetchedData) => {
-      setData(fetchedData);
-    });
+    fetchData().then(setData).catch(console.error);
   }, []);
 
-  const handleEdit = (todo: dataType): void => {
-    console.log(`Editing todo: ${todo.title}`);
-    setEditingId(todo.id);
-    setEditText(todo.title);
+  const startEditing = (item: DataType) => {
+    setEditingId(item.id);
+    setEditText(item.title);
   };
 
-  const handleSave = async (id: string): Promise<void> => {
+  const saveEdit = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/todoItem`, {
+      const res = await fetch("/api/todoItem", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // bodyにIDと更新したいテキストの両方を含める
-        body: JSON.stringify({ id: id, title: editText }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, title: editText }),
       });
-
-      if (!response.ok) {
-        console.error("Failed to update todo");
-        return;
-      }
-
-      const updatedTodo = await response.json();
-
-      setData((prevData) =>
-        prevData.map((item) => (item.id === id ? updatedTodo : item))
-      );
-
+      if (!res.ok) throw new Error("Failed to update");
+      const updated = await res.json();
+      setData((prev) => prev.map(d => d.id === id ? updated : d));
       setEditingId(null);
       setEditText("");
-    } catch (error) {
-      console.error("Error updating todo:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleCancel = (): void => {
+  const cancelEdit = () => {
     setEditingId(null);
     setEditText("");
   };
 
+  const deleteItem = async (id: string) => {
+    try {
+      const res = await fetch("/api/todoItem", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+      setData(prev => prev.filter(d => d.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="container mx-auto p-8 min-h-screen">
-      <main className="flex flex-col gap-8 items-center">
-        <Card className="w-full max-w-2xl">
-          <CardHeader>
-            <CardTitle className="text-center">CSCI4830 Hello world!</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {data.map((todo: dataType) => (
-              <div
-                className="flex items-center justify-between p-4 border rounded-lg"
-                key={todo.id}
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  {editingId === todo.id ? (
-                    <Input
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      className="flex-1"
-                    />
-                  ) : (
-                    <span className="font-medium">{todo.title}</span>
-                  )}
-                  <Badge variant={todo.completed ? "default" : "secondary"}>
-                    {todo.completed ? "Completed" : "Not Completed"}
-                  </Badge>
-                </div>
-                <div className="flex gap-2">
-                  {editingId === todo.id ? (
-                    <>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleSave(todo.id)}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(todo)}
-                    >
-                      Edit
-                    </Button>
-                  )}
-                </div>
+      <h1 className="text-3xl font-bold mb-6">CSCI4830 To‑Do List</h1>
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Tasks</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data.map(item => (
+            <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-4 flex-1">
+                {editingId === item.id ? (
+                  <Input
+                    value={editText}
+                    onChange={e => setEditText(e.target.value)}
+                    className="flex-1"
+                  />
+                ) : (
+                  <span className="font-medium">{item.title}</span>
+                )}
+                <Badge variant={item.completed ? "default" : "secondary"}>
+                  {item.completed ? "Completed" : "Pending"}
+                </Badge>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      </main>
+              <div className="flex gap-2">
+                {editingId === item.id ? (
+                  <>
+                    <Button size="sm" onClick={() => saveEdit(item.id)}>Save</Button>
+                    <Button variant="outline" size="sm" onClick={cancelEdit}>Cancel</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => startEditing(item)}>Edit</Button>
+                    <Button variant="outline" size="sm" onClick={() => deleteItem(item.id)}>Delete</Button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
