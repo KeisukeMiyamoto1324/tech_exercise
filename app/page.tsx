@@ -12,21 +12,14 @@ interface DataType {
   completed: boolean;
 }
 
-async function fetchData(): Promise<DataType[]> {
-  const response = await fetch("/api/todoItem");
-  if (!response.ok) throw new Error("Failed to fetch data");
-  return response.json();
-}
+
 
 export default function HomePage() {
   const [data, setData] = useState<DataType[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>("");
 
-  useEffect(() => {
-    fetchData().then(setData).catch(console.error);
-  }, []);
-
+  
   const startEditing = (item: DataType) => {
     setEditingId(item.id);
     setEditText(item.title);
@@ -70,7 +63,7 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto p-8 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">CSCI4830 To‑Do List</h1>
+      <h1 className="text-3xl font-bold mb-6">CSCI4830 To-Do List</h1>
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle>Tasks</CardTitle>
